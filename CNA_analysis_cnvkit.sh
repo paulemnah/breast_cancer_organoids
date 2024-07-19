@@ -1,5 +1,6 @@
+#!/bin/bash
 
-cd /path/to/wdir
+cd /path/to/your/analysisdir
 dir=data/cnvkit/results
 mkdir -p $dir
 module load R/4.1.0
@@ -7,7 +8,7 @@ module load anaconda3/2021.05
 source activate /path/to/.conda/envs/cnvkit
 
 
-# Link or copy bam files to the bams folder
+# Link or copy bam files to the following bams folder
 mkdir data/bams
 
 
@@ -15,7 +16,7 @@ mkdir data/bams
 refgen=/path/to/reference_genomes/bwa06_1KGRef_PhiX/hs37d5_PhiX.fa
 annos=/path/to/gene_annotations/Homo_sapiens.GRCh37.87.gff3
 
-
+declare -a PIDs=("PDO-13" "PDO-19" "PDO-21" "PDO-22" "PDO-24" "PDO-27" "PDO-33" "PDO-35" "PDO-42" "PDO-45" "PDO-46" "PDO-47" "PDO-56" "PDO-71" "PDO-78" "PDO-789" "PDO-1058" "PDO-1171")
 
 # run everything in batch
 # bsub -R "rusage[mem=100G]" -q "verylong" -n 64 -J "cnvkit_wgs" cnvkit.py batch --method wgs data/bams/*organoids.bam --normal data/bams/*germline.bam \
@@ -25,7 +26,7 @@ annos=/path/to/gene_annotations/Homo_sapiens.GRCh37.87.gff3
 
 
 # Or for each sample in parallel...
-for PID in PDO-45 PDO-35 PDO-789; do
+for PID in "${PIDs[@]}"; do
   echo $PID
   bsub -R "rusage[mem=50G]" -q "long" -n 50 cnvkit.py coverage data/bams/${PID}_organoids.bam $dir/hs37d5_PhiX.target.bed -o $dir/${PID}_organoids.targetcoverage.cnn
   bsub -R "rusage[mem=1G]" -q "long" -n 10 cnvkit.py coverage data/bams/${PID}_organoids.bam $dir/hs37d5_PhiX.antitarget.bed -o $dir/${PID}_organoids.antitargetcoverage.cnn
@@ -36,7 +37,7 @@ for PID in PDO-45 PDO-35 PDO-789; do
 done
 
 
-for PID in PDO-45 PDO-35 PDO-789; do
+for PID in "${PIDs[@]}"; do
   echo $PID
   bsub -R "rusage[mem=20G]" -q "long" -n 20 cnvkit.py fix $dir/${PID}_organoids.targetcoverage.cnn $dir/${PID}_organoids.antitargetcoverage.cnn data/cnvkit/my_reference.cnn -o $dir/${PID}_organoids.cnr
   bsub -R "rusage[mem=20G]" -q "long" -n 20 cnvkit.py fix $dir/${PID}_germline.targetcoverage.cnn $dir/${PID}_germline.antitargetcoverage.cnn data/cnvkit/my_reference.cnn -o $dir/${PID}_germline.cnr
@@ -44,7 +45,7 @@ for PID in PDO-45 PDO-35 PDO-789; do
 done
   
 #then after all jobs finished
-for PID in PDO-45 PDO-35 PDO-789; do
+for PID in "${PIDs[@]}"; do
   echo $PID
   bsub -R "rusage[mem=20G]" -q "long" -n 20 cnvkit.py segment $dir/${PID}_organoids.cnr -o $dir/${PID}_organoids.cns
   bsub -R "rusage[mem=20G]" -q "long" -n 20 cnvkit.py segment $dir/${PID}_germline.cnr -o $dir/${PID}_germline.cns
@@ -55,7 +56,13 @@ done
 
 
 #link tumour and normal into separate folders for heatmap plotting
-for PID in PDO-45 PDO-35 PDO-789; do
+mkdir $dir/normal_organoids/
+for PID in PDO-13 PDO-19 PDO-24 PDO-27; do
+  cp $dir/$PID*.cn{s,r} $dir/normal_organoids/
+done
+
+mkdir $dir/tumour_organoids/
+for PID in PDO-45 PDO-35 PDO-789 PDO-1058 PDO-1171; do
   cp $dir/$PID*.cn{s,r} $dir/tumour_organoids/
 done
 
