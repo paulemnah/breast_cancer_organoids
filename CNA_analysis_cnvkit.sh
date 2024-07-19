@@ -16,7 +16,7 @@ mkdir data/bams
 refgen=/path/to/reference_genomes/bwa06_1KGRef_PhiX/hs37d5_PhiX.fa
 annos=/path/to/gene_annotations/Homo_sapiens.GRCh37.87.gff3
 
-declare -a PIDs=("PDO-13" "PDO-19" "PDO-21" "PDO-22" "PDO-24" "PDO-27" "PDO-33" "PDO-35" "PDO-42" "PDO-45" "PDO-46" "PDO-47" "PDO-56" "PDO-71" "PDO-78" "PDO-789" "PDO-1058" "PDO-1171")
+declare -a PIDs=("PDO-13" "PDO-19" "PDO-24" "PDO-27" "PDO-35" "PDO-45" "PDO-789" "PDO-1058" "PDO-1171")
 
 # run everything in batch
 # bsub -R "rusage[mem=100G]" -q "verylong" -n 64 -J "cnvkit_wgs" cnvkit.py batch --method wgs data/bams/*organoids.bam --normal data/bams/*germline.bam \
